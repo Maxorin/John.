@@ -110,7 +110,7 @@ async function adminPage(env) {
   const html = `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bot status</title>
+<title>John status</title>
 <style>
   body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
   table { border-collapse: collapse; width: 100%; }
@@ -279,7 +279,7 @@ export default {
     }
 
     if (request.method !== "POST") {
-      return new Response("ß.build3.251026 ExREL Lambda System");
+      return new Response("ß.build4.251026 ExREL Lambda System");
     }
 
     const secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token");
