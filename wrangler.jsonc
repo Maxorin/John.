@@ -47,7 +47,10 @@
 	"vars": {
 		"TEAM_DOMAIN": "https://johnroasterbot.cloudflareaccess.com",
 		"POLICY_AUD": "b5e997b3d8d06f886eda625f0581eb5e6a88e24eb70fdf0e5328f4b67f23ac2e"
-	}
+		},
+		"ai": {
+			"binding": "AI"
+		}
 	// "assets": {  "directory": "./public/",  "binding": "ASSETS" }
 	/**
 	 * Service Bindings (communicate between multiple Workers)
