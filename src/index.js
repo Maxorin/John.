@@ -184,7 +184,7 @@ function pickLevel(requestText) {
 }
 
 // ---------- the real AI call (Cloudflare Workers AI) ----------
-const MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8";
 
 async function getLLMReply(env, context) {
   if (!context.originalText) return NO_TEXT_REPLY;
@@ -213,7 +213,15 @@ async function getLLMReply(env, context) {
       ],
       max_tokens: 150,
     });
-    const text = ((result && result.response) || "").trim();
+    const text = String(
+      (result && result.response) ||
+        (result &&
+          result.choices &&
+          result.choices[0] &&
+          result.choices[0].message &&
+          result.choices[0].message.content) ||
+        ""
+    ).trim();
     if (!text) {
       await recordError(env, "AI returned an empty reply");
       return FALLBACK_REPLY;
