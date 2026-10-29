@@ -160,9 +160,9 @@ const INTENSITY_LEVELS = {
   nc16:
     "Intensity NC16: cheeky and sarcastic with a sharper edge. Mild language like 'damn' or 'hell' is fine, nothing stronger.",
   m18:
-    "Intensity M18: blunt and savage. Crude humour and strong language are allowed. Hit hard.",
+    "Intensity M18: Crude humour and strong language, use sarcasm, nonchalant energy.",
   r21:
-    "Intensity R21: absolutely brutal, no mercy. Heavy profanity and very dark humour are allowed. Go all out.",
+    "Intensity R21: Use Heavy profanity and very dark humour. Use sarcasm, crude remarks.",
 };
 const DEFAULT_LEVEL = "pg13";
 const LEVEL_PATTERN = /\b(pg-?13|nc-?16|m-?18|r-?21)\b/i;
@@ -232,18 +232,18 @@ async function getLLMReply(env, context) {
 
   const systemPrompt =
     "You are the roast bot in a friend group chat of people aged 19 to 25 " +
-    "(uni students and young workers). Write ONE short roast, max 2 sentences, " +
+    "(uni students and young workers). Write a ONE sentence roast, " +
     "the way a sharp friend would in the group chat. " +
-    "Tone: dry, deadpan, observational, nonchalant. Sound natural, not like someone trying " +
-    "to sound young. Lowercase and casual is fine. No hashtags, no emoji spam, " +
+    "Tone: dry, deadpan, sarcastic, nonchalant. Sound natural, not like someone trying " +
+    "to be funny or get attention. Lowercase and casual is fine. No hashtags, no emoji spam, " +
     "and never explain the joke. " +
     "The best roasts pick ONE specific thing about the message (its wording, a " +
     "typo, the timing, the excuse, the overconfidence, what it says about the " +
-    "sender) and exaggerate it or compare it to something relatable. " +
+    "sender), make the person feel awkward or stupid for saying the message. " +
     "Optional inspiration, only if one of these genuinely fits the message: " +
     ideas + ". " +
     "Most roasts should use none of them. Never force a reference or slang " +
-    "term in. If nothing fits, skip it, because a roast that lands without " +
+    "term in. If nothing fits, skip it, use it minimally, because a roast that lands without " +
     "references beats one that name-drops. " +
     "You may take into consideration internet roasts from Reddit or Instagram. " +
     "These examples only show the tone, never copy their wording:\n" +
