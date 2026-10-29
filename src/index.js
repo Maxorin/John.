@@ -155,8 +155,6 @@ async function sendReply(env, chatId, replyToMessageId, text) {
 
 // ---------- roast intensity levels (Singapore film-rating style) ----------
 const INTENSITY_LEVELS = {
-  pg13:
-    "Intensity PG13: clever and teasing, a burn that gets an 'oooh' from the group without really hurting anyone. No swearing.",
   nc16:
     "Intensity NC16: sharper and more sarcastic, a proper dig.",
   m18:
@@ -164,7 +162,7 @@ const INTENSITY_LEVELS = {
   r21:
     "Intensity R21: Heavy profanity and very dark humour are allowed. Go all out.",
 };
-const DEFAULT_LEVEL = "pg13";
+const DEFAULT_LEVEL = "nc16";
 const LEVEL_PATTERN = /\b(pg-?13|nc-?16|m-?18|r-?21)\b/i;
 
 const FALLBACK_REPLY =
@@ -275,6 +273,7 @@ async function getLLMReply(env, context) {
     (idea
       ? "If, and only if, it fits perfectly, you may nod to: " + idea + ". Otherwise ignore it. "
       : "") +
+    " You may consider publicly poasted roasts on Reddit, Instagram, Tiktok, Youtube" +  
     "Do not use slang unless it is truly natural. Never use these overused phrases: " +
     BANNED_PHRASES + ". " +
     INTENSITY_LEVELS[level] + " " +
