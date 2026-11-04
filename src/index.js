@@ -309,15 +309,18 @@ const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 // Pulls the text out of whatever shape the AI model replies in
 function extractText(result) {
-  return String(
+  let value =
     (result && result.response) ||
-      (result &&
-        result.choices &&
-        result.choices[0] &&
-        result.choices[0].message &&
-        result.choices[0].message.content) ||
-      ""
-  ).trim();
+    (result &&
+      result.choices &&
+      result.choices[0] &&
+      result.choices[0].message &&
+      result.choices[0].message.content) ||
+    "";
+  // Workers AI can hand back JSON that is already parsed into an object.
+  // Turn it back into text, otherwise String(object) becomes "[object Object]".
+  if (typeof value === "object") value = JSON.stringify(value);
+  return String(value).trim();
 }
 
 // Asks the AI once. Returns the raw reply and just the roast part of it.
