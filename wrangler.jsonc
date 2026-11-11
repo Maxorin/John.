@@ -27,6 +27,13 @@
 			"id": "d1adef375e3249669ab4eb0445f2bb5e"
 		}
 	],
+	"d1_databases": [
+		{
+			"binding": "PREFERENCES_DB",
+			"database_name": "john_preferences",
+			"database_id": "7c50ac5c-e583-4499-b0a2-0a308b66f99c"
+		}
+	],
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
