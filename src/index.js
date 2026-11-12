@@ -84,7 +84,7 @@ async function adminPage(env) {
     const eventRows = stats.events
       .map(
         (e) =>
-          `<tr><td>${escapeHtml(formatTime(e.time))}</td><td>${escapeHtml(e.chatType)}</td>` +
+          `<tr><td>${escapeHtml(formatTime(e.time))}</td><td>${escapeHtml(e.chatType)}</td><td>${escapeHtml(e.chatId)}</td>` +
           `<td>${escapeHtml(e.requester)}</td><td>${escapeHtml(e.originalSender)}</td>` +
           `<td>${escapeHtml(e.status)}</td></tr>`
       )
@@ -100,8 +100,8 @@ async function adminPage(env) {
       <p>Last ping: <b>${escapeHtml(formatTime(stats.lastPing))}</b><br>
          Today: <b>${stats.byDay[todayKey()] || 0}</b> &nbsp; Total: <b>${stats.total}</b></p>
       <h2>Recent events (last 20)</h2>
-      <table><tr><th>Time</th><th>Chat</th><th>Requester</th><th>Replied-to</th><th>Result</th></tr>
-      ${eventRows || '<tr><td colspan="5">None yet</td></tr>'}</table>
+      <table><tr><th>Time</th><th>Chat</th><th>Chat ID</th><th>Requester</th><th>Replied-to</th><th>Result</th></tr>
+      ${eventRows || '<tr><td colspan="6">None yet</td></tr>'}</table>
       <h2>Recent errors (last 10)</h2>
       <table><tr><th>Time</th><th>Message</th></tr>
       ${errorRows || '<tr><td colspan="2">None</td></tr>'}</table>`;
@@ -854,6 +854,7 @@ export default {
         await recordEvent(env, {
           time: new Date().toISOString(),
           chatType: context.chatType,
+          chatId: context.chatId,
           requester: context.requester,
           originalSender: context.originalSender,
           status: status,
