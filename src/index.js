@@ -75,11 +75,107 @@ function formatTime(iso) {
   return new Date(iso).toLocaleString("en-SG", { timeZone: "Asia/Singapore" });
 }
 
+// ---------- shared look for the admin pages ----------
+const ADMIN_THEME_INIT = `<script>
+(function () {
+  var t = null;
+  try { t = localStorage.getItem("johnTheme"); } catch (e) {}
+  if (t !== "light" && t !== "dark") {
+    t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  document.documentElement.setAttribute("data-theme", t);
+})();
+</script>`;
+
+const ADMIN_THEME_TOGGLE_SCRIPT = `<script>
+(function () {
+  var toggle = document.querySelector("#themeToggle");
+  if (!toggle) return;
+  function apply(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    toggle.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+    try { localStorage.setItem("johnTheme", theme); } catch (e) {}
+  }
+  toggle.addEventListener("click", function () {
+    apply(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+  });
+  apply(document.documentElement.getAttribute("data-theme") || "light");
+})();
+</script>`;
+
+const ADMIN_STYLE = `<style>
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --text: #1d2433; --muted: #5d6779; --border: #dde1ea;
+    --accent: #4f46e5; --accent-text: #ffffff; --danger: #d92d3f; --ok: #15803d; --input-bg: #ffffff;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 4px 16px rgba(20, 30, 60, .06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1320; --card: #181d2e; --text: #e8ebf5; --muted: #98a1b8; --border: #2b3249;
+    --accent: #8b87ff; --accent-text: #0f1320; --danger: #ff6b7a; --ok: #4ade80; --input-bg: #11162a;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .3);
+  }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); max-width: 900px; margin: 0 auto; padding: 1.25rem 1rem 3rem; line-height: 1.5; }
+  .topbar { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .brand { font-weight: 800; font-size: 1.25rem; margin-right: auto; }
+  .nav { display: flex; gap: .25rem; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: .25rem; }
+  .nav a { padding: .4rem .9rem; border-radius: 7px; color: var(--muted); text-decoration: none; font-weight: 600; }
+  .nav a:hover { color: var(--text); }
+  .nav a.active { background: var(--accent); color: var(--accent-text); }
+  h1 { margin: 0; font-size: 1.6rem; }
+  .sub { margin: .25rem 0 1.25rem; color: var(--muted); font-size: .95rem; }
+  a.more { color: var(--accent); text-decoration: none; font-weight: 600; }
+  a.more:hover { text-decoration: underline; }
+  input, textarea, button { font: inherit; color: inherit; }
+  button { cursor: pointer; border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: .45rem .8rem; margin: 0 .5rem .5rem 0; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button.danger { color: var(--danger); border-color: var(--danger); }
+  button.ghost { margin: 0; }
+  .tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; overflow-x: auto; }
+  .tabs button { border: none; border-bottom: 3px solid transparent; border-radius: 8px 8px 0 0; background: none; margin: 0; padding: .6rem 1rem; color: var(--muted); white-space: nowrap; }
+  .tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; box-shadow: var(--shadow); margin-bottom: 1rem; }
+  .panel[hidden] { display: none; }
+  .panel h2 { margin-top: 0; font-size: 1.15rem; }
+  label { display: block; font-weight: 600; font-size: .9rem; }
+  input, textarea { width: 100%; margin: .25rem 0 1rem; padding: .6rem; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; }
+  input:focus, textarea:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  textarea { min-height: 26rem; font-family: ui-monospace, monospace; font-size: .9rem; }
+  ul.records { list-style: none; padding: 0; margin: 0; }
+  ul.records li { margin: 0 0 .6rem; padding: .7rem .8rem; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); font-size: .9rem; }
+  ul.records button { margin: 0 .6rem 0 0; color: var(--text); font-weight: 600; }
+  #message { min-height: 1.5em; margin-top: 1rem; color: var(--muted); }
+  .pills { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .6rem; }
+  .pill { display: flex; justify-content: space-between; align-items: center; padding: .6rem .8rem; border: 1px solid var(--border); border-radius: 10px; font-size: .9rem; }
+  .pill.ok b { color: var(--ok); }
+  .pill.bad b { color: var(--danger); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .75rem; margin-bottom: 1rem; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; box-shadow: var(--shadow); }
+  .stat span { display: block; color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+  .stat b { display: block; font-size: 1.3rem; margin-top: .2rem; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border-bottom: 1px solid var(--border); padding: .5rem .6rem; text-align: left; font-size: .85rem; white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; }
+  td.wrap { white-space: normal; }
+</style>`;
+
+function adminHeader(active) {
+  const link = (href, label, key) =>
+    '<a href="' + href + '"' + (key === active ? ' class="active" aria-current="page"' : "") + ">" + label + "</a>";
+  return '<header class="topbar"><div class="brand">John</div><nav class="nav">' +
+    link("/johnroaster/admin", "Status", "status") +
+    link("/johnroaster/admin/preferences", "Preferences", "preferences") +
+    '</nav><button type="button" id="themeToggle" class="ghost">Dark mode</button></header>';
+}
+
 async function adminPage(env) {
   const stats = await loadStats(env).catch(() => null);
-  const yesNo = (v) => (v ? "✅ set" : "❌ missing");
+  const pill = (label, ok) =>
+    `<div class="pill ${ok ? "ok" : "bad"}"><span>${label}</span><b>${ok ? "✓ Set" : "✗ Missing"}</b></div>`;
 
-  let activity = "<p>Storage (BOT_KV) is not connected.</p>";
+  let activity = `<section class="panel"><p>Storage (BOT_KV) is not connected.</p></section>`;
   if (stats) {
     const eventRows = stats.events
       .map(
@@ -92,40 +188,49 @@ async function adminPage(env) {
     const errorRows = stats.errors
       .map(
         (e) =>
-          `<tr><td>${escapeHtml(formatTime(e.time))}</td><td>${escapeHtml(e.message)}</td></tr>`
+          `<tr><td>${escapeHtml(formatTime(e.time))}</td><td class="wrap">${escapeHtml(e.message)}</td></tr>`
       )
       .join("");
     activity = `
-      <h2>Activity</h2>
-      <p>Last ping: <b>${escapeHtml(formatTime(stats.lastPing))}</b><br>
-         Today: <b>${stats.byDay[todayKey()] || 0}</b> &nbsp; Total: <b>${stats.total}</b></p>
-      <h2>Recent events (last 20)</h2>
-      <table><tr><th>Time</th><th>Chat</th><th>Chat ID</th><th>Requester</th><th>Replied-to</th><th>Result</th></tr>
-      ${eventRows || '<tr><td colspan="6">None yet</td></tr>'}</table>
-      <h2>Recent errors (last 10)</h2>
-      <table><tr><th>Time</th><th>Message</th></tr>
-      ${errorRows || '<tr><td colspan="2">None</td></tr>'}</table>`;
+      <div class="stats">
+        <div class="stat"><span>Last ping</span><b style="font-size:1rem">${escapeHtml(formatTime(stats.lastPing))}</b></div>
+        <div class="stat"><span>Today</span><b>${stats.byDay[todayKey()] || 0}</b></div>
+        <div class="stat"><span>Total</span><b>${stats.total}</b></div>
+      </div>
+      <section class="panel">
+        <h2>Recent events (last 20)</h2>
+        <div class="table-wrap"><table><tr><th>Time</th><th>Chat</th><th>Chat ID</th><th>Requester</th><th>Replied-to</th><th>Result</th></tr>
+        ${eventRows || '<tr><td colspan="6">None yet</td></tr>'}</table></div>
+      </section>
+      <section class="panel">
+        <h2>Recent errors (last 10)</h2>
+        <div class="table-wrap"><table><tr><th>Time</th><th>Message</th></tr>
+        ${errorRows || '<tr><td colspan="2">None</td></tr>'}</table></div>
+      </section>`;
   }
 
   const html = `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>John status</title>
-<style>
-  body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; font-size: 14px; }
-  th { background: #f2f2f2; }
-</style></head><body>
-<h1>John Status</h1>
-<h2>Health</h2>
-<p>Bot token: ${yesNo(env.BOT_TOKEN)}<br>
-   Webhook secret: ${yesNo(env.WEBHOOK_SECRET)}<br>
-   Workers AI: ${yesNo(env.AI)}<br>
-   Stats storage (BOT_KV): ${yesNo(env.BOT_KV)}<br>
-   Preferences database (D1): ${yesNo(env.PREFERENCES_DB)}</p>
-<p><a href="/johnroaster/admin/preferences">Manage chat preferences</a></p>
+${ADMIN_THEME_INIT}
+${ADMIN_STYLE}</head><body>
+${adminHeader("status")}
+<h1>Status</h1>
+<p class="sub">Is John healthy, and what has he been up to?</p>
+<section class="panel">
+  <h2>Health</h2>
+  <div class="pills">
+    ${pill("Bot token", env.BOT_TOKEN)}
+    ${pill("Webhook secret", env.WEBHOOK_SECRET)}
+    ${pill("Workers AI", env.AI)}
+    ${pill("Stats storage (BOT_KV)", env.BOT_KV)}
+    ${pill("Preferences database (D1)", env.PREFERENCES_DB)}
+  </div>
+  <p style="margin-bottom:0"><a class="more" href="/johnroaster/admin/preferences">Manage requester preferences →</a></p>
+</section>
 ${activity}
+${ADMIN_THEME_TOGGLE_SCRIPT}
 </body></html>`;
 
   return new Response(html, {
@@ -139,66 +244,11 @@ function preferencesAdminPage() {
 <html><head><meta charset="utf-8"><meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>John requester preferences</title>
-<script>
-(function () {
-  var t = null;
-  try { t = localStorage.getItem("johnTheme"); } catch (e) {}
-  if (t !== "light" && t !== "dark") {
-    t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  }
-  document.documentElement.setAttribute("data-theme", t);
-})();
-</script>
-<style>
-  :root {
-    --bg: #f5f6fa; --card: #ffffff; --text: #1d2433; --muted: #5d6779; --border: #dde1ea;
-    --accent: #4f46e5; --accent-text: #ffffff; --danger: #d92d3f; --input-bg: #ffffff;
-    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 4px 16px rgba(20, 30, 60, .06);
-  }
-  :root[data-theme="dark"] {
-    --bg: #0f1320; --card: #181d2e; --text: #e8ebf5; --muted: #98a1b8; --border: #2b3249;
-    --accent: #8b87ff; --accent-text: #0f1320; --danger: #ff6b7a; --input-bg: #11162a;
-    --shadow: 0 1px 3px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .3);
-  }
-  * { box-sizing: border-box; }
-  body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem 3rem; line-height: 1.5; }
-  header.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
-  h1 { margin: 0; font-size: 1.6rem; }
-  .sub { margin: .25rem 0 0; color: var(--muted); font-size: .95rem; }
-  .actions { display: flex; gap: .5rem; align-items: center; }
-  a.link { color: var(--accent); text-decoration: none; font-weight: 600; padding: .4rem .6rem; }
-  a.link:hover { text-decoration: underline; }
-  input, textarea, button { font: inherit; color: inherit; }
-  button { cursor: pointer; border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: .45rem .8rem; margin: 0 .5rem .5rem 0; }
-  button:hover { border-color: var(--accent); }
-  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
-  button.danger { color: var(--danger); border-color: var(--danger); }
-  button.ghost { margin: 0; }
-  .tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; overflow-x: auto; }
-  .tabs button { border: none; border-bottom: 3px solid transparent; border-radius: 8px 8px 0 0; background: none; margin: 0; padding: .6rem 1rem; color: var(--muted); white-space: nowrap; }
-  .tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; box-shadow: var(--shadow); }
-  .panel[hidden] { display: none; }
-  .panel h2 { margin-top: 0; font-size: 1.15rem; }
-  label { display: block; font-weight: 600; font-size: .9rem; }
-  input, textarea { width: 100%; margin: .25rem 0 1rem; padding: .6rem; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; }
-  input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  textarea { min-height: 26rem; font-family: ui-monospace, monospace; font-size: .9rem; }
-  ul.records { list-style: none; padding: 0; margin: 0; }
-  ul.records li { margin: 0 0 .6rem; padding: .7rem .8rem; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); font-size: .9rem; }
-  ul.records button { margin: 0 .6rem 0 0; color: var(--text); font-weight: 600; }
-  #message { min-height: 1.5em; margin-top: 1rem; color: var(--muted); }
-</style></head><body>
-<header class="top">
-  <div>
-    <h1>Requester preferences</h1>
-    <p class="sub">Manage how John behaves for each requester.</p>
-  </div>
-  <div class="actions">
-    <a class="link" href="/johnroaster/admin">Back to status</a>
-    <button type="button" id="themeToggle" class="ghost">Dark mode</button>
-  </div>
-</header>
+${ADMIN_THEME_INIT}
+${ADMIN_STYLE}</head><body>
+${adminHeader("preferences")}
+<h1>Requester preferences</h1>
+<p class="sub">Manage how John behaves for each requester.</p>
 <div class="tabs" role="tablist">
   <button type="button" role="tab" data-tab="requesters" aria-selected="true">Saved requesters</button>
   <button type="button" role="tab" data-tab="edit" aria-selected="false">Edit preferences</button>
@@ -302,21 +352,10 @@ function showTab(name) {
   panels.forEach((p) => { p.hidden = p.id !== "panel-" + name; });
 }
 tabButtons.forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
-
-const themeToggle = document.querySelector("#themeToggle");
-function applyTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-  themeToggle.textContent = theme === "dark" ? "Light mode" : "Dark mode";
-  try { localStorage.setItem("johnTheme", theme); } catch (e) {}
-}
-themeToggle.addEventListener("click", () => {
-  applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
-});
-applyTheme(document.documentElement.getAttribute("data-theme") || "light");
-
 setForm("", defaults);
 loadRecords().catch((error) => showMessage(error.message));
 </script>
+${ADMIN_THEME_TOGGLE_SCRIPT}
 </body></html>`;
 
   return new Response(html, {
