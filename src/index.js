@@ -139,29 +139,91 @@ function preferencesAdminPage() {
 <html><head><meta charset="utf-8"><meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>John requester preferences</title>
+<script>
+(function () {
+  var t = null;
+  try { t = localStorage.getItem("johnTheme"); } catch (e) {}
+  if (t !== "light" && t !== "dark") {
+    t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  document.documentElement.setAttribute("data-theme", t);
+})();
+</script>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-  input, textarea, button { font: inherit; }
-  input, textarea { box-sizing: border-box; width: 100%; margin: .25rem 0 1rem; padding: .5rem; }
-  textarea { min-height: 28rem; font-family: ui-monospace, monospace; }
-  button { margin: 0 .5rem .5rem 0; padding: .4rem .7rem; }
-  li { margin: .5rem 0; }
-  #message { min-height: 1.5em; }
+  :root {
+    --bg: #f5f6fa; --card: #ffffff; --text: #1d2433; --muted: #5d6779; --border: #dde1ea;
+    --accent: #4f46e5; --accent-text: #ffffff; --danger: #d92d3f; --input-bg: #ffffff;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 4px 16px rgba(20, 30, 60, .06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1320; --card: #181d2e; --text: #e8ebf5; --muted: #98a1b8; --border: #2b3249;
+    --accent: #8b87ff; --accent-text: #0f1320; --danger: #ff6b7a; --input-bg: #11162a;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .3);
+  }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem 3rem; line-height: 1.5; }
+  header.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  h1 { margin: 0; font-size: 1.6rem; }
+  .sub { margin: .25rem 0 0; color: var(--muted); font-size: .95rem; }
+  .actions { display: flex; gap: .5rem; align-items: center; }
+  a.link { color: var(--accent); text-decoration: none; font-weight: 600; padding: .4rem .6rem; }
+  a.link:hover { text-decoration: underline; }
+  input, textarea, button { font: inherit; color: inherit; }
+  button { cursor: pointer; border: 1px solid var(--border); background: var(--card); border-radius: 8px; padding: .45rem .8rem; margin: 0 .5rem .5rem 0; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button.danger { color: var(--danger); border-color: var(--danger); }
+  button.ghost { margin: 0; }
+  .tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem; overflow-x: auto; }
+  .tabs button { border: none; border-bottom: 3px solid transparent; border-radius: 8px 8px 0 0; background: none; margin: 0; padding: .6rem 1rem; color: var(--muted); white-space: nowrap; }
+  .tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; box-shadow: var(--shadow); }
+  .panel[hidden] { display: none; }
+  .panel h2 { margin-top: 0; font-size: 1.15rem; }
+  label { display: block; font-weight: 600; font-size: .9rem; }
+  input, textarea { width: 100%; margin: .25rem 0 1rem; padding: .6rem; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; }
+  input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  textarea { min-height: 26rem; font-family: ui-monospace, monospace; font-size: .9rem; }
+  ul.records { list-style: none; padding: 0; margin: 0; }
+  ul.records li { margin: 0 0 .6rem; padding: .7rem .8rem; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); font-size: .9rem; }
+  ul.records button { margin: 0 .6rem 0 0; color: var(--text); font-weight: 600; }
+  #message { min-height: 1.5em; margin-top: 1rem; color: var(--muted); }
 </style></head><body>
-<h1>Requester preferences</h1>
-<p>Settings belong to the person making the request, not the group chat. Telegram handles identify requesters; people without a handle use their Telegram user ID. Changing a handle creates a new preference record.</p>
-<p><a href="/johnroaster/admin">Back to status</a></p>
-<h2>Saved requesters</h2><ul id="records"><li>Loading...</li></ul>
-<h2>Edit a requester</h2>
-<form id="form">
-  <label for="requesterKey">Telegram handle (or fallback user ID)</label>
-  <input id="requesterKey" name="requesterKey" required placeholder="@telegramhandle or id:123456789">
-  <label for="settings">Preferences (JSON)</label>
-  <textarea id="settings" name="settings" spellcheck="false"></textarea>
-  <button type="submit">Save preferences</button>
-  <button type="button" id="newRecord">New requester defaults</button>
-  <button type="button" id="deleteRecord">Delete this requester record</button>
-</form>
+<header class="top">
+  <div>
+    <h1>Requester preferences</h1>
+    <p class="sub">Manage how John behaves for each requester.</p>
+  </div>
+  <div class="actions">
+    <a class="link" href="/johnroaster/admin">Back to status</a>
+    <button type="button" id="themeToggle" class="ghost">Dark mode</button>
+  </div>
+</header>
+<div class="tabs" role="tablist">
+  <button type="button" role="tab" data-tab="requesters" aria-selected="true">Saved requesters</button>
+  <button type="button" role="tab" data-tab="edit" aria-selected="false">Edit preferences</button>
+  <button type="button" role="tab" data-tab="about" aria-selected="false">About</button>
+</div>
+<section class="panel" id="panel-requesters" role="tabpanel">
+  <h2>Saved requesters</h2>
+  <ul id="records" class="records"><li>Loading...</li></ul>
+</section>
+<section class="panel" id="panel-edit" role="tabpanel" hidden>
+  <h2>Edit a requester</h2>
+  <form id="form">
+    <label for="requesterKey">Telegram handle (or fallback user ID)</label>
+    <input id="requesterKey" name="requesterKey" required placeholder="@telegramhandle or id:123456789">
+    <label for="settings">Preferences (JSON)</label>
+    <textarea id="settings" name="settings" spellcheck="false"></textarea>
+    <button type="submit" class="primary">Save preferences</button>
+    <button type="button" id="newRecord">New requester defaults</button>
+    <button type="button" id="deleteRecord" class="danger">Delete this requester record</button>
+  </form>
+</section>
+<section class="panel" id="panel-about" role="tabpanel" hidden>
+  <h2>About</h2>
+  <p>Settings belong to the person making the request, not the group chat. Telegram handles identify requesters; people without a handle use their Telegram user ID. Changing a handle creates a new preference record.</p>
+</section>
 <p id="message" role="status"></p>
 <script>
 const endpoint = "/johnroaster/admin/preferences/data";
@@ -194,7 +256,7 @@ async function loadRecords() {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = "Edit " + (record.telegramHandle ? "@" + record.telegramHandle : record.requesterKey);
-    button.addEventListener("click", () => setForm(record.requesterKey, record.preferences));
+    button.addEventListener("click", () => { setForm(record.requesterKey, record.preferences); showTab("edit"); });
     const detail = record.telegramUserId ? " (user ID " + record.telegramUserId + ")" : "";
     item.append(button, document.createTextNode(detail + " Updated: " + record.updatedAt));
     records.append(item);
@@ -218,7 +280,7 @@ form.addEventListener("submit", async (event) => {
     showMessage(error.message);
   }
 });
-document.querySelector("#newRecord").addEventListener("click", () => setForm("", defaults));
+document.querySelector("#newRecord").addEventListener("click", () => { setForm("", defaults); showTab("edit"); });
 document.querySelector("#deleteRecord").addEventListener("click", async () => {
   const key = requesterKey.value.trim();
   if (!key) { showMessage("Enter a Telegram handle or fallback user ID first."); return; }
@@ -233,6 +295,25 @@ document.querySelector("#deleteRecord").addEventListener("click", async () => {
     showMessage(error.message);
   }
 });
+const tabButtons = document.querySelectorAll("[data-tab]");
+const panels = document.querySelectorAll(".panel");
+function showTab(name) {
+  tabButtons.forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  panels.forEach((p) => { p.hidden = p.id !== "panel-" + name; });
+}
+tabButtons.forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+const themeToggle = document.querySelector("#themeToggle");
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  themeToggle.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+  try { localStorage.setItem("johnTheme", theme); } catch (e) {}
+}
+themeToggle.addEventListener("click", () => {
+  applyTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+});
+applyTheme(document.documentElement.getAttribute("data-theme") || "light");
+
 setForm("", defaults);
 loadRecords().catch((error) => showMessage(error.message));
 </script>
